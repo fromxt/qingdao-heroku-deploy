@@ -39,6 +39,8 @@ urls = (
     '/addphone', 'addphone',
     '/removephone', 'removephone'
 )
+# 使用 globals() 定时任务会重复执行两次
+# app = web.application(urls, globals())
 app = web.application(urls, globals())
 render = web.template.render('templates/')
 
