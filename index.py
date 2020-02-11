@@ -32,13 +32,15 @@ import threading
 #     'userid':'1C8434B91D3F3E02BD634AA11BBA673B'
 # },
 # 步骤：获取验证码，验证验证码获取加密手机号， 抽奖
+
 fileName = 'phone.txt'
 urls = (
     '/qingdao', 'qingdao',
     '/addphone', 'addphone',
     '/removephone', 'removephone'
 )
-
+# 使用 globals() 定时任务会重复执行两次
+# app = web.application(urls, globals())
 app = web.application(urls, globals())
 render = web.template.render('templates/')
 
@@ -106,7 +108,7 @@ def readFile():
             file.close()
 
 
-# --------------------------------------req--------------------------------
+# --------------------------------------class req--------------------------------
 class Req():
     def __init__(self):
         self.userid = ''
@@ -191,7 +193,7 @@ class Req():
         elif jsonObj['status'] == 0 or jsonObj['status'] == 200:
             self.count += 1
             data = jsonObj['data']
-            prize = switch_id(data['level'])
+            prize = self.switch_id(data['level'])
             print(prize)
         elif jsonObj['status'] == 700:
             print('当前抽奖人数过多，请稍后重试！')
@@ -213,6 +215,19 @@ class Req():
         print('formData', self.formData)
         print('--------------------------')
 
+    def switch_id(self,id):
+        switcher = {
+            '1': '50MB',
+            '2': '100MB',
+            '3': '幸运奖',
+            '4': '1000MB',
+            '5': '20钻石',
+            '6': '15yuan',
+            '7': '50yuan'
+        }
+        return switcher.get(id)
+
+# --------------------------------------class user--------------------------------
 class User():
     mobile = ''
     image = ''
@@ -229,18 +244,8 @@ class User():
         print('++++++++++++++')
         
 
-def switch_id(id):
-    switcher = {
-        '1': '50MB',
-        '2': '100MB',
-        '3': '幸运奖',
-        '4': '1000MB',
-        '5': '20钻石',
-        '6': '15yuan',
-        '7': '50yuan'
-    }
-    return switcher.get(id)
 
+# --------------------------------------class image--------------------------------
 class MyImage():
     imgName = ''
     imgPath = ''
@@ -253,7 +258,8 @@ class MyImage():
                 file.write(data)
         img = Image.open(self.imgName)
         return img
-
+    # 使用pytesseract识别图片
+    # 先去除干扰线，再把背景变透明
     def imgToString(self,img):
         img = img.convert('RGBA')
         pixdata = img.load()
@@ -264,7 +270,7 @@ class MyImage():
                 if pixdata[x,y][0] > 80 and pixdata[x,y][0] <= 220  and pixdata[x,y][1] > 80 and pixdata[x,y][1] <= 220 and pixdata[x,y][2] > 80 and pixdata[x,y][2]< 220:
                     pixdata[x, y] = (255, 255, 255,0)
         return pytesseract.image_to_string(img)
-
+    # 删除图片
     def removeThisImg(self):
         path = os.path.abspath('.') + '\\' + self.imgName
         path = path.replace('\\','/')
@@ -276,6 +282,7 @@ def getResponse(url):
     response = requests.get(url)
     return response
 
+# 匹配手机号
 def checkMobile(mobile):
     # ret = re.match(r"1[35678]\d{9}", tel)
     # 由于手机号位数大于11位也能匹配成功，所以修改如下：
@@ -325,10 +332,9 @@ def getEncryptionMobile(reqObj):
         return False
 
 def getPhoneList():
-    
     return readFile()
 
-def gg(reqObj):
+def outwitTheMilk(reqObj):
     if(reqObj.count > 2):
         return
     code = getVerificationCode(reqObj)
@@ -348,47 +354,43 @@ def gg(reqObj):
         reqObj.goodLuck()
         reqObj.mobile = reqObj.sourceMobile
         time.sleep(3)
-    gg(reqObj)    
+    outwitTheMilk(reqObj)    
 
-def go():
+# 不知道为什么执行了两次，用isRun标记一下
+
+def job():
     mobileList = getPhoneList()
     for mobile in mobileList:
         print('手机号', mobile)
         if not(checkMobile(mobile)):
             continue
         reqObj = Req()
-
         reqObj.mobile = mobile
         reqObj.sourceMobile = mobile
-
         resp = getResponse(reqObj.officialUrl)
-
         reqObj.setCookiesAndUserId(resp)
-
-        gg(reqObj)
+        outwitTheMilk(reqObj)
+    print('抽奖完毕!')
 
 # --------------------------------------定时任务--------------------------------
-schedule.every().day.at('17:38').do(go)
 
+# 定时任务
 def scheduleTask():
+    # schedule.every().day.at('21:24').do(job) 放在全局变量会被执行两次
+    schedule.every().day.at('21:26').do(job)
     while True:
         # 启动服务
         schedule.run_pending()
-        time.sleep(1)
-
+        time.sleep(10)
+# web
 def webAppTask():
     app.run()
 
-def main():
-    threads = []
-    threads.append(threading.Thread(target=scheduleTask))
-    threads.append(threading.Thread(target=webAppTask))
-    for t in threads:
-        t.start()
-
-            
 
 if __name__ == "__main__":
-    main()
+    threading.Thread(target=scheduleTask).start()
+    threading.Thread(target=webAppTask).start()
+
+    
     
     
