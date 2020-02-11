@@ -10,8 +10,6 @@ import json
 import time
 import re
 import web
-import schedule
-import threading
 
 #官网
 # url = 'https://m.client.10010.com/sma-lottery/qpactivity/qingpiindex'
@@ -32,17 +30,14 @@ import threading
 #     'userid':'1C8434B91D3F3E02BD634AA11BBA673B'
 # },
 # 步骤：获取验证码，验证验证码获取加密手机号， 抽奖
-fileName = 'phone.txt'
+
 urls = (
     '/qingdao', 'qingdao',
-    '/addphone', 'addphone',
-    '/removephone', 'removephone'
+    '/addphone', 'addphone'
 )
 
 app = web.application(urls, globals())
 render = web.template.render('templates/')
-
-# --------------------------------------web--------------------------------
 
 class qingdao:
     def GET(self):
@@ -52,61 +47,8 @@ class addphone:
     def POST(self):
         data = web.input('phone')
         phone = data.phone
-        result = writeToFile(phone)
-        if result:
-            return '添加成功'
-        return '手机号已存在'
+        return 
 
-class removephone:
-    def POST(self):
-        data = web.input('phone')
-        phone = data.phone
-        removePhoneByFile(phone)
-        return '删除成功'
-
-def removePhoneByFile(phone):
-    with open(fileName,"r",encoding="utf-8") as f:
-        lines = f.readlines()
-        #print(lines)
-    with open(fileName,"w",encoding="utf-8") as f_w:
-        for line in lines:
-            if phone in line.strip():
-                continue
-            f_w.write(line)
-
-def writeToFile(phone):
-    phoneList = readFile()
-    for pho in phoneList:
-        if pho == phone:
-            return False
-    file = open(fileName, 'a')
-    try:
-        file.write(phone + '\n')
-        return True
-    finally:
-        file.close()
-    
-def readFile():
-    phoneList = []
-    file = {}
-    try:
-        file = open(fileName, 'r')
-        phones = file.readlines()
-
-        for phone in phones:
-            # print(phone.strip())
-            phoneList.append(phone.strip())
-        return phoneList
-    except FileNotFoundError:
-        file = open(fileName, mode='w', encoding='utf-8')
-        print("文件创建成功！")
-        return phoneList
-    finally:
-        if not(file is None):
-            file.close()
-
-
-# --------------------------------------req--------------------------------
 class Req():
     def __init__(self):
         self.userid = ''
@@ -165,8 +107,8 @@ class Req():
         # self.printReqParam()
         resp = requests.post(self.validationUrl, data=self.formData, headers=self.headers)
         # resp.encoding = 'utf-8'
-        # print('resp1----------------')
-        # print(resp.text)
+        print('resp1----------------')
+        print(resp.text)
         # b'{"code":"YES","mobile":"aceaf972232b2372d3b8184affa9f367"}'
         jsonObj = json.loads(resp.text)
         return jsonObj
@@ -174,8 +116,8 @@ class Req():
     def goodLuck (self):
         resp = requests.post(self.luckUrl, data=self.formData, headers=self.headers)
         resp.encoding = 'utf-8'
-        # print('resp2----------------')
-        # print(resp.text)
+        print('resp2----------------')
+        print(resp.text)
         jsonObj = json.loads(resp.text)
         if jsonObj['status'] == 500:
             isunicom = jsonObj['isunicom']
@@ -293,9 +235,9 @@ def checkMobile(mobile):
 def getVerificationCode(reqObj):
     # 请求获取验证码
     codeUrl = reqObj.getCodeUrl()
-    # print('验证码链接', codeUrl)
+    print('验证码链接', codeUrl)
     imgResp = getResponse(codeUrl)
-    # print(imgResp)
+    print(imgResp)
     myImage = MyImage('test.png')
     # 转为图片
     imgObj = myImage.saveImage(imgResp)
@@ -325,8 +267,11 @@ def getEncryptionMobile(reqObj):
         return False
 
 def getPhoneList():
-    
-    return readFile()
+    phoneList = []
+    pho = '1857890689'
+    for i in range(1,10):
+        phoneList.append(pho + str(i))
+    return phoneList
 
 def gg(reqObj):
     if(reqObj.count > 2):
@@ -350,8 +295,7 @@ def gg(reqObj):
         time.sleep(3)
     gg(reqObj)    
 
-def go():
-    mobileList = getPhoneList()
+def go(mobileList):
     for mobile in mobileList:
         print('手机号', mobile)
         if not(checkMobile(mobile)):
@@ -367,28 +311,10 @@ def go():
 
         gg(reqObj)
 
-# --------------------------------------定时任务--------------------------------
-schedule.every().day.at('17:38').do(go)
-
-def scheduleTask():
-    while True:
-        # 启动服务
-        schedule.run_pending()
-        time.sleep(1)
-
-def webAppTask():
-    app.run()
-
 def main():
-    threads = []
-    threads.append(threading.Thread(target=scheduleTask))
-    threads.append(threading.Thread(target=webAppTask))
-    for t in threads:
-        t.start()
+    go(getPhoneList())
 
-            
 
 if __name__ == "__main__":
-    main()
-    
-    
+    # main()
+    app.run()

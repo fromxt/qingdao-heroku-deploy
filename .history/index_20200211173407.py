@@ -165,8 +165,8 @@ class Req():
         # self.printReqParam()
         resp = requests.post(self.validationUrl, data=self.formData, headers=self.headers)
         # resp.encoding = 'utf-8'
-        # print('resp1----------------')
-        # print(resp.text)
+        print('resp1----------------')
+        print(resp.text)
         # b'{"code":"YES","mobile":"aceaf972232b2372d3b8184affa9f367"}'
         jsonObj = json.loads(resp.text)
         return jsonObj
@@ -174,8 +174,8 @@ class Req():
     def goodLuck (self):
         resp = requests.post(self.luckUrl, data=self.formData, headers=self.headers)
         resp.encoding = 'utf-8'
-        # print('resp2----------------')
-        # print(resp.text)
+        print('resp2----------------')
+        print(resp.text)
         jsonObj = json.loads(resp.text)
         if jsonObj['status'] == 500:
             isunicom = jsonObj['isunicom']
@@ -293,9 +293,9 @@ def checkMobile(mobile):
 def getVerificationCode(reqObj):
     # 请求获取验证码
     codeUrl = reqObj.getCodeUrl()
-    # print('验证码链接', codeUrl)
+    print('验证码链接', codeUrl)
     imgResp = getResponse(codeUrl)
-    # print(imgResp)
+    print(imgResp)
     myImage = MyImage('test.png')
     # 转为图片
     imgObj = myImage.saveImage(imgResp)
@@ -368,7 +368,7 @@ def go():
         gg(reqObj)
 
 # --------------------------------------定时任务--------------------------------
-schedule.every().day.at('17:38').do(go)
+schedule.every().day.at('17:27').do(go)
 
 def scheduleTask():
     while True:

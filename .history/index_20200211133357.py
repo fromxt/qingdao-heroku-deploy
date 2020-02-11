@@ -10,8 +10,6 @@ import json
 import time
 import re
 import web
-import schedule
-import threading
 
 #官网
 # url = 'https://m.client.10010.com/sma-lottery/qpactivity/qingpiindex'
@@ -42,8 +40,6 @@ urls = (
 app = web.application(urls, globals())
 render = web.template.render('templates/')
 
-# --------------------------------------web--------------------------------
-
 class qingdao:
     def GET(self):
         return render.index()
@@ -62,7 +58,7 @@ class removephone:
         data = web.input('phone')
         phone = data.phone
         removePhoneByFile(phone)
-        return '删除成功'
+        return phone
 
 def removePhoneByFile(phone):
     with open(fileName,"r",encoding="utf-8") as f:
@@ -105,8 +101,6 @@ def readFile():
         if not(file is None):
             file.close()
 
-
-# --------------------------------------req--------------------------------
 class Req():
     def __init__(self):
         self.userid = ''
@@ -165,8 +159,8 @@ class Req():
         # self.printReqParam()
         resp = requests.post(self.validationUrl, data=self.formData, headers=self.headers)
         # resp.encoding = 'utf-8'
-        # print('resp1----------------')
-        # print(resp.text)
+        print('resp1----------------')
+        print(resp.text)
         # b'{"code":"YES","mobile":"aceaf972232b2372d3b8184affa9f367"}'
         jsonObj = json.loads(resp.text)
         return jsonObj
@@ -174,8 +168,8 @@ class Req():
     def goodLuck (self):
         resp = requests.post(self.luckUrl, data=self.formData, headers=self.headers)
         resp.encoding = 'utf-8'
-        # print('resp2----------------')
-        # print(resp.text)
+        print('resp2----------------')
+        print(resp.text)
         jsonObj = json.loads(resp.text)
         if jsonObj['status'] == 500:
             isunicom = jsonObj['isunicom']
@@ -293,9 +287,9 @@ def checkMobile(mobile):
 def getVerificationCode(reqObj):
     # 请求获取验证码
     codeUrl = reqObj.getCodeUrl()
-    # print('验证码链接', codeUrl)
+    print('验证码链接', codeUrl)
     imgResp = getResponse(codeUrl)
-    # print(imgResp)
+    print(imgResp)
     myImage = MyImage('test.png')
     # 转为图片
     imgObj = myImage.saveImage(imgResp)
@@ -325,8 +319,11 @@ def getEncryptionMobile(reqObj):
         return False
 
 def getPhoneList():
-    
-    return readFile()
+    phoneList = []
+    pho = '1857890689'
+    for i in range(1,10):
+        phoneList.append(pho + str(i))
+    return phoneList
 
 def gg(reqObj):
     if(reqObj.count > 2):
@@ -350,8 +347,7 @@ def gg(reqObj):
         time.sleep(3)
     gg(reqObj)    
 
-def go():
-    mobileList = getPhoneList()
+def go(mobileList):
     for mobile in mobileList:
         print('手机号', mobile)
         if not(checkMobile(mobile)):
@@ -367,28 +363,10 @@ def go():
 
         gg(reqObj)
 
-# --------------------------------------定时任务--------------------------------
-schedule.every().day.at('17:38').do(go)
-
-def scheduleTask():
-    while True:
-        # 启动服务
-        schedule.run_pending()
-        time.sleep(1)
-
-def webAppTask():
-    app.run()
-
 def main():
-    threads = []
-    threads.append(threading.Thread(target=scheduleTask))
-    threads.append(threading.Thread(target=webAppTask))
-    for t in threads:
-        t.start()
+    go(getPhoneList())
 
-            
 
 if __name__ == "__main__":
-    main()
-    
-    
+    # main()
+    app.run()
