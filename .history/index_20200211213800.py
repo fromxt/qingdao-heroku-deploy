@@ -159,8 +159,12 @@ class Req():
 
     # 验证码验证
     def vailSubmit(self):
+        # self.setFormData(user)
+        # self.printReqParam()
         resp = requests.post(self.validationUrl, data=self.formData, headers=self.headers)
         # resp.encoding = 'utf-8'
+        # print('resp1----------------')
+        # print(resp.text)
         # b'{"code":"YES","mobile":"aceaf972232b2372d3b8184affa9f367"}'
         jsonObj = json.loads(resp.text)
         return jsonObj
@@ -168,6 +172,8 @@ class Req():
     def goodLuck (self):
         resp = requests.post(self.luckUrl, data=self.formData, headers=self.headers)
         resp.encoding = 'utf-8'
+        # print('resp2----------------')
+        # print(resp.text)
         jsonObj = json.loads(resp.text)
         if jsonObj['status'] == 500:
             isunicom = jsonObj['isunicom']
@@ -306,12 +312,16 @@ def getVerificationCode(reqObj):
 # 验证验证码获取加密手机号
 def getEncryptionMobile(reqObj):
     jsonObj = reqObj.vailSubmit()
+    # print(jsonObj)
     if jsonObj['code'] == 'YES':
         return jsonObj['mobile']
     elif jsonObj['code'] == 'IMGNULL':
         #刷新验证码
         print('刷新验证码')
         time.sleep(3)
+        # code = getVerificationCode(reqObj)
+        # reqObj.formData['image'] = code
+        # return getEncryptionMobile(reqObj, code)
         return False
     elif jsonObj['code'] == 'IMGERROR':
         # 应该是验证码错误
@@ -328,6 +338,7 @@ def outwitTheMilk(reqObj):
     print('验证码:'+code)
 
     reqObj.setFormData()
+    # print(reqObj.printReqParam())
 
     # 验证码验证并获取加密手机号
     encryptionMobile = getEncryptionMobile(reqObj)
@@ -340,6 +351,8 @@ def outwitTheMilk(reqObj):
         reqObj.mobile = reqObj.sourceMobile
         time.sleep(3)
     outwitTheMilk(reqObj)    
+
+# 不知道为什么执行了两次，用isRun标记一下
 
 def job():
     mobileList = getPhoneList()
