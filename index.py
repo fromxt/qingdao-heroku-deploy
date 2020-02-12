@@ -34,14 +34,23 @@ import threading
 fileName = 'phone.txt'
 # 备份文件
 backFileName = 'phone.back'
+
+# 请求路径
+# 分别是首页,添加手机号,移除手机号
 urls = (
     '/qingdao', 'qingdao',
     '/addphone', 'addphone',
     '/removephone', 'removephone'
 )
+# web应用
 app = web.application(urls, globals())
+# templates模版文件夹
 render = web.template.render('templates/')
+
+# 抽奖任务执行时间
 taskTime = '00:30'
+
+
 # --------------------------------------web--------------------------------
 
 class qingdao:
@@ -87,7 +96,6 @@ def recoverRecord():
     with open(fileName,"w",encoding="utf-8") as f_w:
         for line in lines:
             f_w.write(line)
-
 
 
 def writeToFile(phone):
