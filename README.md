@@ -19,7 +19,7 @@ https://m.client.10010.com/sma-lottery/qpactivity/getSysManageLoginCode.htm?user
 - threading
 
 说明:
-运行需要安装tesseract-ocr。程序没有使用数据库，仅使用phone.txt记录抽奖情况，phone.back备份文件
+运行需要安装tesseract-ocr。程序没有使用数据库，仅使用phone.txt记录抽奖情况，phone.back备份文件。
 准备提供验证码验证接口，只针对[青岛流量](https://m.client.10010.com/sma-lottery/qpactivity/qingpiindex)
 
 # 2-12更新：
