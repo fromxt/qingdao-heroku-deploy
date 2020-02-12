@@ -1,12 +1,10 @@
 # -*- coding:utf-8 -*-  
 # teenyda
-# 使用tesseract-ocr识别验证码
+# 使用接口识别验证码
 
 import requests
 import time
 from http import cookiejar
-import pytesseract
-from PIL import Image
 import os
 import json
 import time
@@ -16,7 +14,7 @@ import schedule
 import threading
 import datetime
 
-#官网
+# 官网
 # url = 'https://m.client.10010.com/sma-lottery/qpactivity/qingpiindex'
 
 # 抽奖接口 post
@@ -42,6 +40,9 @@ taskTime = '00:30'
 # 抽奖时间间隔
 intervalTime = 1
 
+# 验证码识别接口(post请求)
+apiUrl = 'http://47.94.234.77:9527/getCode'
+
 # 请求路径
 # 分别是首页,添加手机号,移除手机号
 urls = (
@@ -53,7 +54,6 @@ urls = (
 app = web.application(urls, globals())
 # templates模版文件夹
 render = web.template.render('templates/')
-
 
 
 # --------------------------------------web--------------------------------
@@ -100,6 +100,7 @@ def recoverRecord():
         lines = backFile.readlines()
         for line in lines:
             mfile.write(line)
+
 
 def writeToFile(phone):
     phoneList = getPhoneList()
@@ -185,18 +186,15 @@ class Req():
             cookiesValue += key + '=' + cookies.get(key) + ';'
             if key == 'JSESSIONID':
                 self.userid = cookies.get(key)
-                
         self.headers['Cookie'] = cookiesValue
 
     # 验证码验证
     def vailSubmit(self):
         resp = requests.post(self.validationUrl, data=self.formData, headers=self.headers)
         # resp.encoding = 'utf-8'
-        # b'{"code":"YES","mobile":"aceaf972232b2372d3b8184affa9f367"}'
         jsonObj = json.loads(resp.text)
         return jsonObj
 
-    # return 返回
     # -3 已抽完
     # -2 不是联通号码
     # -1 没中奖
@@ -204,7 +202,7 @@ class Req():
     # 1 100MB
     # 2 1000MB
     # 3 20砖石
-    def goodLuck (self):
+    def goodLuck(self):
         resp = requests.post(self.luckUrl, data=self.formData, headers=self.headers)
         resp.encoding = 'utf-8'
         jsonObj = json.loads(resp.text)
@@ -235,17 +233,6 @@ class Req():
             'image': self.code,
             'userid': self.userid
         }
-
-    def printReqParam(self):
-        print('--------------------------')
-        print('userid', self.userid)
-        print('code', self.code)
-        print('mobile', self.mobile)
-        print('sourceMobile', self.sourceMobile)
-        print('headers', self.headers)
-        print('formData', self.formData)
-        print('--------------------------')
-
 
     def switch_id(self,id):
         switcher = {
@@ -288,42 +275,17 @@ class Record():
         line = self.phone + ' ' + ','.join('%s' %id for id in self.prizeList) + '\n'
         return line
 
-# --------------------------------------class image--------------------------------
-class MyImage():
-    imgName = ''
-    imgPath = ''
-    def __init__(self, imgName):
-        self.imgName = imgName
-    
-    def saveImage(self, res):
-        with open(self.imgName, 'wb') as file:
-            for data in res.iter_content(128):
-                file.write(data)
-        img = Image.open(self.imgName)
-        return img
-    # 使用pytesseract识别图片
-    # 先去除干扰线，再把背景变透明
-    def imgToString(self,img):
-        img = img.convert('RGBA')
-        pixdata = img.load()
-        for y in range(img.size[1]):
-            for x in range(img.size[0]):
-                if pixdata[x,y][0] == pixdata[x,y][1] and pixdata[x,y][0] == pixdata[x,y][3]:
-                    pixdata[x, y] = (255, 255, 255,0)
-                if pixdata[x,y][0] > 80 and pixdata[x,y][0] <= 220  and pixdata[x,y][1] > 80 and pixdata[x,y][1] <= 220 and pixdata[x,y][2] > 80 and pixdata[x,y][2]< 220:
-                    pixdata[x, y] = (255, 255, 255,0)
-        return pytesseract.image_to_string(img)
-    # 删除图片
-    def removeThisImg(self):
-        path = os.path.abspath('.') + '\\' + self.imgName
-        path = path.replace('\\','/')
-        print(path)
-        os.remove(path)
-
 
 def getResponse(url):
     response = requests.get(url)
     return response
+
+def callApigetCode(codeUrl):
+    formData = {
+        "url": codeUrl
+    }
+    resp = requests.post(apiUrl, formData)
+    return resp.text
 
 # 匹配手机号
 def checkMobile(mobile):
@@ -336,25 +298,7 @@ def checkMobile(mobile):
         print("手机号码错误")
         return False
 
-    
-# 获取验证码，验证验证码获取加密手机号， 抽奖
 
-# 获取验证码
-def getVerificationCode(reqObj):
-    # 请求获取验证码
-    codeUrl = reqObj.getCodeUrl()
-    # print('验证码链接', codeUrl)
-    imgResp = getResponse(codeUrl)
-    # print(imgResp)
-    myImage = MyImage('test.png')
-    # 转为图片
-    imgObj = myImage.saveImage(imgResp)
-    # 转为字符串
-    code = myImage.imgToString(imgObj)
-    if len(code) != 4:
-        print('验证码识别失败！重新获取验证码')
-        getVerificationCode(reqObj)
-    return code
 
 # 验证验证码获取加密手机号
 def getEncryptionMobile(reqObj):
@@ -384,7 +328,7 @@ def outwitTheMilk(reqObj,f_w,recordObj):
             f_w.write(line)
             # 返回不在抽奖
             return
-    code = getVerificationCode(reqObj)
+    code = callApigetCode(reqObj.getCodeUrl())
     reqObj.code = code
     print('验证码:'+code)
 
@@ -396,34 +340,30 @@ def outwitTheMilk(reqObj,f_w,recordObj):
     if isinstance(encryptionMobile, str):
         reqObj.mobile = encryptionMobile
         reqObj.setFormData()
-        # 抽奖
+        # 抽奖# 抽奖# 抽奖
         prize = reqObj.goodLuck()
         recordObj.prize = prize
         # 记录
         doRecord(recordObj)
 
         reqObj.mobile = reqObj.sourceMobile
-
         time.sleep(intervalTime)
 
-    outwitTheMilk(reqObj, f_w, recordObj)    
+    outwitTheMilk(reqObj, f_w, recordObj)
+ 
 
 def job():
     with open(fileName,"r",encoding="utf-8") as f:
         lines = f.readlines()
-        #print(lines)
     with open(fileName,"w",encoding="utf-8") as f_w:
         # line -> 手机号码 50MB累计流量,100MB累计流量,1000MB累计流量,20钻石
         for line in lines:
             record = Record()
             record.setAttribute(line)
-
             print('手机号', record.phone)
-
             if not(checkMobile(record.phone)):
                 # 手机号码错误将移除
                 continue
-            
             reqObj = Req()
             reqObj.mobile = record.phone
             reqObj.sourceMobile = record.phone
@@ -438,10 +378,10 @@ def job():
             
             # 进行抽奖
             outwitTheMilk(reqObj,f_w, record)
+
     print('抽奖完成')
     # 如果是最后一天，将恢复记录
     if isLastDay():
-        print('lastday')
         recoverRecord()
 
 
@@ -459,7 +399,7 @@ def doRecord(record):
     if record.prize == -1:
         record.isunicom = False
         return
-
+    
     if record.prize == 1:
         record.prizeList[0] += 50
     if record.prize == 2:
@@ -480,7 +420,6 @@ def last_day_of_month(any_day):
     return next_month - datetime.timedelta(days=next_month.day)
 # 抽奖
 def isLastDay():
-    
     # 当前日期
     now = datetime.datetime.now().date()
     year,month,day = str(now).split("-")  # 切割
@@ -488,10 +427,8 @@ def isLastDay():
     year = int(year)
     month = int(month)
     day = int(day)
-
     # 获取这个月最后一天
     last_day = last_day_of_month(datetime.date(year, month, day))
-    # 2020-02-29
     # 判断当前日期是否为月末
     if str(now) == last_day:
         return True
