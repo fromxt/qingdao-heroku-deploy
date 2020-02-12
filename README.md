@@ -15,3 +15,4 @@ https://m.client.10010.com/sma-lottery/qpactivity/getSysManageLoginCode.htm?user
 ### 添加抽奖记录
 每一行格式:手机号 50MB累计流量,100MB累计流量,1000MB累计流量,20钻石
 ### 用户抽到1000MB不在抽奖
+月底恢复记录
