@@ -19,6 +19,8 @@ https://m.client.10010.com/sma-lottery/qpactivity/getSysManageLoginCode.htm?user
 - threading
 
 说明:
+测试环境：python3。
+
 程序没有使用数据库，仅使用phone.txt记录抽奖情况，phone.back备份文件。
 
 index.py为原版，运行需要安装[tesseract-ocr](https://digi.bib.uni-mannheim.de/tesseract/)。indexC.py改为调用接口获取验证码，无需安装tesseract-ocr。
@@ -30,6 +32,7 @@ index.py为原版，运行需要安装[tesseract-ocr](https://digi.bib.uni-mannh
 请求参数 FormData = {url: 验证码地址}
 返回参数：验证码
 indexC.py已经写好，可以直接使用
+启动:python indexC.py，默认使用8080端口，使用其它端口：python indexC.py 端口号
 
 # 2-12更新：
 ### 添加抽奖记录日志（phone.txt）
