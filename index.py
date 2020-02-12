@@ -400,7 +400,7 @@ def outwitTheMilk(reqObj,f_w,recordObj):
         prize = reqObj.goodLuck()
         recordObj.prize = prize
         # 记录
-        doRecord(recordObj)
+        setRecord(recordObj)
 
         reqObj.mobile = reqObj.sourceMobile
 
@@ -446,8 +446,8 @@ def job():
 
 
 
-# 记录日志
-def doRecord(record):
+# 记录一下
+def setRecord(record):
     # -1 不是联通号码,移除
     # 0 无抽奖次数
     # 1 50MB
@@ -478,9 +478,8 @@ def last_day_of_month(any_day):
     """
     next_month = any_day.replace(day=28) + datetime.timedelta(days=4)  # this will never fail
     return next_month - datetime.timedelta(days=next_month.day)
-# 抽奖
+
 def isLastDay():
-    
     # 当前日期
     now = datetime.datetime.now().date()
     year,month,day = str(now).split("-")  # 切割
@@ -503,7 +502,6 @@ def isLastDay():
 
 # 定时任务
 def scheduleTask():
-    # schedule.every().day.at('21:24').do(job) 放在全局变量会被执行两次
     schedule.every().day.at(taskTime).do(job)
     while True:
         # 启动服务
