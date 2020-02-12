@@ -32,6 +32,8 @@ import threading
 
 # 手机号保存在phone.txt文件下
 fileName = 'phone.txt'
+# 备份文件
+backFileName = 'phone.back'
 urls = (
     '/qingdao', 'qingdao',
     '/addphone', 'addphone',
@@ -39,7 +41,7 @@ urls = (
 )
 app = web.application(urls, globals())
 render = web.template.render('templates/')
-
+taskTime = '00:30'
 # --------------------------------------web--------------------------------
 
 class qingdao:
@@ -63,37 +65,49 @@ class removephone:
         return '删除成功'
 
 def removePhoneByFile(phone):
+    removePhone(fileName,phone)
+    removePhone(backFileName,phone)
+
+def removePhone(fileName,removePhone):
     with open(fileName,"r",encoding="utf-8") as f:
         lines = f.readlines()
         #print(lines)
     with open(fileName,"w",encoding="utf-8") as f_w:
         for line in lines:
-            if phone in line.strip():
+            record = line.split(' ')
+            phoneRecord = record[0].strip()
+            if removePhone in phoneRecord:
                 continue
             f_w.write(line)
 
+
 def writeToFile(phone):
-    phoneList = readFile()
+    phoneList = getPhoneList()
     for pho in phoneList:
         if pho == phone:
             return False
     file = open(fileName, 'a')
+    backFile = open(backFileName, 'a')
     try:
-        file.write(phone + '\n')
+        file.write(phone + ' 0,0,0,0' + '\n')
+        backFile.write(phone + ' 0,0,0,0' + '\n')
         return True
     finally:
         file.close()
-    
-def readFile():
+        backFile.close()
+
+def getPhoneList():
     phoneList = []
     file = {}
     try:
         file = open(fileName, 'r')
-        phones = file.readlines()
+        lines = file.readlines()
 
-        for phone in phones:
+        for line in lines:
+            record = line.split(' ')
+            phone = record[0].strip()
             # print(phone.strip())
-            phoneList.append(phone.strip())
+            phoneList.append(phone)
         return phoneList
     except FileNotFoundError:
         file = open(fileName, mode='w', encoding='utf-8')
@@ -165,6 +179,14 @@ class Req():
         jsonObj = json.loads(resp.text)
         return jsonObj
 
+    # return 返回
+    # -3 已抽完
+    # -2 不是联通号码
+    # -1 没中奖
+    # 0 50MB
+    # 1 100MB
+    # 2 1000MB
+    # 3 20砖石
     def goodLuck (self):
         resp = requests.post(self.luckUrl, data=self.formData, headers=self.headers)
         resp.encoding = 'utf-8'
@@ -173,18 +195,20 @@ class Req():
             isunicom = jsonObj['isunicom']
             if not(isunicom):
                 print(self.formData['mobile'] + '不是联通手机')
-                self.count = 3
-                return
+                # self.count = 3
+                return -1
             else:
                 print('没抽奖次数了哦，改日再战吧!')
                 self.count = 3
-                return
+                return 0
 
         elif jsonObj['status'] == 0 or jsonObj['status'] == 200:
             self.count += 1
             data = jsonObj['data']
-            prize = self.switch_id(data['level'])
+            level = data['level']
+            prize = self.switch_id(level)
             print(prize)
+            return int(level)
         elif jsonObj['status'] == 700:
             print('当前抽奖人数过多，请稍后重试！')
 
@@ -205,6 +229,7 @@ class Req():
         print('formData', self.formData)
         print('--------------------------')
 
+
     def switch_id(self,id):
         switcher = {
             '1': '50MB',
@@ -217,23 +242,33 @@ class Req():
         }
         return switcher.get(id)
 
-# --------------------------------------class user--------------------------------
-class User():
-    mobile = ''
-    image = ''
-    userid = ''
-    def __init__(self, mobile, imageCode, userid):
-        self.mobile = mobile
-        self.image = imageCode
-        self.userid = userid
-    def printParam(self):
-        print('++++++++++++++')
-        print(self.mobile)
-        print(self.image)
-        print(self.userid)
-        print('++++++++++++++')
-        
 
+# --------------------------------------class user--------------------------------
+class Record():
+    phone = ''
+    prizeList = []
+    prize = 0
+    prize_50 = 0
+    prize_100 = 0
+    prize_1000 = 0     
+
+    def setAttribute(self,line):
+        # line既一行，存放手机号和奖品记录
+        # 手机号 50MB累计流量,100MB累计流量,1000MB累计流量,20钻石
+        record = line.split(' ')
+        self.phone = record[0].strip()
+        strArr = record[1].strip().split(',')
+        # 将字符串转成数组
+        prizeList = list(map(int, strArr))
+        self.prizeList = prizeList
+        self.prize_1000 = int(prizeList[2])
+        self.prize_50 = int(prizeList[0])
+        self.prize_100 = int(prizeList[1])
+
+    def getLine(self):
+        # 将数据写入文件(join函数就是字符串的函数,参数和插入的都要是字符串)
+        line = self.phone + ' ' + ','.join('%s' %id for id in self.prizeList) + '\n'
+        return line
 
 # --------------------------------------class image--------------------------------
 class MyImage():
@@ -317,11 +352,13 @@ def getEncryptionMobile(reqObj):
         # 应该是验证码错误
         return False
 
-def getPhoneList():
-    return readFile()
 
-def outwitTheMilk(reqObj):
+def outwitTheMilk(reqObj,f_w,recordObj):
     if(reqObj.count > 2):
+        # 写入文件
+        line = recordObj.getLine()
+        print('写入line=',line)
+        f_w.write(line)
         return
     code = getVerificationCode(reqObj)
     reqObj.code = code
@@ -331,36 +368,83 @@ def outwitTheMilk(reqObj):
 
     # 验证码验证并获取加密手机号
     encryptionMobile = getEncryptionMobile(reqObj)
-    time.sleep(2)
+    # time.sleep(1)
     if isinstance(encryptionMobile, str):
         reqObj.mobile = encryptionMobile
         reqObj.setFormData()
         # 抽奖
-        reqObj.goodLuck()
+        prize = reqObj.goodLuck()
+        recordObj.prize = prize
+        # 记录
+        doRecord(recordObj)
+
         reqObj.mobile = reqObj.sourceMobile
-        time.sleep(3)
-    outwitTheMilk(reqObj)    
+        # time.sleep(1)
+    outwitTheMilk(reqObj, f_w, recordObj)    
 
 def job():
-    mobileList = getPhoneList()
-    for mobile in mobileList:
-        print('手机号', mobile)
-        if not(checkMobile(mobile)):
-            continue
-        reqObj = Req()
-        reqObj.mobile = mobile
-        reqObj.sourceMobile = mobile
-        resp = getResponse(reqObj.officialUrl)
-        reqObj.setCookiesAndUserId(resp)
-        outwitTheMilk(reqObj)
-    print('抽奖完毕!')
+    with open(fileName,"r",encoding="utf-8") as f:
+        lines = f.readlines()
+        #print(lines)
+    with open(fileName,"w",encoding="utf-8") as f_w:
+        # line -> 手机号码 50MB累计流量,100MB累计流量,1000MB累计流量,20钻石
+        for line in lines:
+            record = Record()
+            record.setAttribute(line)
+
+            print('手机号', record.phone)
+
+            if not(checkMobile(record.phone)):
+                # 手机号码错误将移除
+                continue
+            
+            reqObj = Req()
+            reqObj.mobile = record.phone
+            reqObj.sourceMobile = record.phone
+            resp = getResponse(reqObj.officialUrl)
+            reqObj.setCookiesAndUserId(resp)
+            
+            # 流量>=1000这个月不再抽奖
+            if record.prize_1000 >= 1000 or record.prize_50 + record.prize_100 >= 1000:
+                print('流量>=1000')
+                f_w.write(line)
+                continue
+            
+            # 进行抽奖
+            outwitTheMilk(reqObj,f_w, record)
+
+
+
+
+# 记录日志
+def doRecord(record):
+    # -1 不是联通号码,移除
+    # 0 无抽奖次数
+    # 1 50MB
+    # 2 100MB
+    # 3 幸运奖
+    # 4 100MB
+    # 5 20钻石
+
+    if record.prize == -1:
+        return
+
+    if record.prize == 1:
+        record.prizeList[0] += 50
+    if record.prize == 2:
+        record.prizeList[1] += 100
+    if record.prize == 4:
+        record.prizeList[2] = 1000
+    if record.prize == 5:
+        record.prizeList[3] += 20
+    
 
 # --------------------------------------定时任务--------------------------------
 
 # 定时任务
 def scheduleTask():
     # schedule.every().day.at('21:24').do(job) 放在全局变量会被执行两次
-    schedule.every().day.at('21:26').do(job)
+    schedule.every().day.at(taskTime).do(job)
     while True:
         # 启动服务
         schedule.run_pending()
