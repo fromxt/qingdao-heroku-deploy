@@ -26,12 +26,14 @@ https://m.client.10010.com/sma-lottery/qpactivity/getSysManageLoginCode.htm?user
 index.py为原版，运行需要安装[tesseract-ocr](https://digi.bib.uni-mannheim.de/tesseract/)。indexC.py改为调用接口获取验证码，无需安装tesseract-ocr。
 具体请看[indexC.py](https://github.com/teenyda/qingdao/blob/master/indexC.py)
 
-验证码验证接口: http://47.94.234.77:9527/getCode，只针对[青岛流量](https://m.client.10010.com/sma-lottery/qpactivity/qingpiindex)。其它网站的验证码均不能识别。
+验证码验证接口: http://47.94.234.77:9527/getCode
 
-请求方法:POST
-请求参数 FormData = {url: 验证码地址}
-返回参数：验证码
-indexC.py已经写好，可以直接使用
+只针对[青岛流量](https://m.client.10010.com/sma-lottery/qpactivity/qingpiindex)。其它网站的验证码均不能识别。
+
+请求方法:POST<br />
+请求参数 FormData = {url: 验证码地址}<br />
+返回参数：验证码<br />
+indexC.py已经写好，可以直接使用<br />
 启动:python indexC.py，默认使用8080端口，使用其它端口：python indexC.py 端口号
 
 # 2-12更新：
