@@ -10,7 +10,7 @@ luckUrl = https://m.client.10010.com/sma-lottery/qpactivity/qpLuckdraw.htm
 https://m.client.10010.com/sma-lottery/qpactivity/getSysManageLoginCode.htm?userid=" + "8F62A3D5E3ED9AF1472CDB071B2BDD63"+"&code=" + new Date().getTime()
 
 需要安装[tesseract-ocr](https://digi.bib.uni-mannheim.de/tesseract/)
-无需安装tesseract-ocr版本请看[indexC.py](https://github.com/teenyda/qingdao/tree/outwitTheMilk)
+无需安装tesseract-ocr版本请看[outwitTheMilk](https://github.com/teenyda/qingdao/tree/outwitTheMilk)
 需要安装模块:
 ```
 pip install requests
