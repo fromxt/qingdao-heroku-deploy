@@ -41,7 +41,10 @@ backFileName = 'phone.back'
 taskTime = '00:30'
 # 抽奖时间间隔
 intervalTime = 1
-
+# 连续多少次不中奖停止抽奖（针对流量被抽完停止抽奖）
+stopCount = 10
+# 不中奖累加器
+stopCountFlag = 0
 # 请求路径
 # 分别是首页,添加手机号,移除手机号
 urls = (
@@ -415,6 +418,11 @@ def job():
     with open(fileName,"w",encoding="utf-8") as f_w:
         # line -> 手机号码 50MB累计流量,100MB累计流量,1000MB累计流量,20钻石
         for line in lines:
+            # 连续stopCount次不中奖则停止抽奖
+            if stopCountFlag == stopCount:
+                f_w.write(line)
+                continue
+
             record = Record()
             record.setAttribute(line)
 
@@ -439,6 +447,7 @@ def job():
             # 进行抽奖
             outwitTheMilk(reqObj,f_w, record)
     print('抽奖完成')
+    stopCountFlag = 0
     # 如果是最后一天，将恢复记录
     if isLastDay():
         print('lastday')
@@ -453,8 +462,9 @@ def setRecord(record):
     # 1 50MB
     # 2 100MB
     # 3 幸运奖
-    # 4 100MB
+    # 4 1000MB
     # 5 20钻石
+    # 6 15yuan
 
     if record.prize == -1:
         record.isunicom = False
@@ -469,6 +479,10 @@ def setRecord(record):
     if record.prize == 5:
         record.prizeList[3] += 20
     
+    if record.prize == 1 or record.prize == 2 or record.prize == 4 or record.prize == 5
+        stopCountFlag = 0
+    else:
+        stopCountFlag += 1
 # --------------------------------------是否是月末(copy)----------------------------
 def last_day_of_month(any_day):
     """
