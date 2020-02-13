@@ -1,2 +1,3 @@
-\.history
-.test1.py
+.history/
+_pycache_/
+index.py
