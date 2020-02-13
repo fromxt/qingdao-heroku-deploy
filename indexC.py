@@ -232,8 +232,7 @@ class Req():
     # 验证码验证
     def vailSubmit(self):
         resp = httpPost(self.validationUrl, data=self.formData, headers=self.headers)
-        # resp = requests.post(self.validationUrl, data=self.formData, headers=self.headers)
-        # resp.encoding = 'utf-8'
+        resp.encoding = 'utf-8'
         jsonObj = json.loads(resp.text)
         return jsonObj
 
@@ -246,7 +245,6 @@ class Req():
     # 3 20砖石
     def goodLuck(self):
         resp = httpPost(self.luckUrl, data=self.formData, headers=self.headers)
-        # resp = requests.post(self.luckUrl, data=self.formData, headers=self.headers)
         resp.encoding = 'utf-8'
         jsonObj = json.loads(resp.text)
         if jsonObj['status'] == 500:
