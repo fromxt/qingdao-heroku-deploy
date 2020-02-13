@@ -510,6 +510,5 @@ def webAppTask():
 
 
 if __name__ == "__main__":
-    # threading.Thread(target=scheduleTask).start()
-    # threading.Thread(target=webAppTask).start()
-    job()
+    threading.Thread(target=scheduleTask).start()
+    threading.Thread(target=webAppTask).start()
