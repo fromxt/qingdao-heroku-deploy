@@ -36,15 +36,19 @@ import datetime
 fileName = 'phone.txt'
 # 备份文件（没有则自动创建）
 backFileName = 'phone.back'
-
 # 抽奖任务执行时间
 taskTime = '00:30'
 # 抽奖时间间隔
 intervalTime = 1
 # 连续多少次不中奖停止抽奖（针对流量被抽完停止抽奖）
-stopCount = 10
-# 不中奖累加器
-stopCountFlag = 0
+stopCount = 15
+
+
+# 不中奖累加器(不用管)
+stopcounter = 0
+# 这个不用管
+stopFlag = False
+
 # 请求路径
 # 分别是首页,添加手机号,移除手机号
 urls = (
@@ -57,6 +61,37 @@ app = web.application(urls, globals())
 # templates模版文件夹
 render = web.template.render('templates/')
 
+# -------------------------------------http-------------------------------
+def httpGet(url):
+    response = {}
+    try:
+        response = requests.get(url)
+    except requests.ConnectTimeout:
+        print('连接超时')
+        httpGet(url)
+    except requests.HTTPError:
+        print('http状态码非200')
+        httpGet(url)
+    except Exception as e:
+        print('未知错误:', e)
+        httpGet(url)
+    return response
+
+def httpPost(url, data, headers):
+    response = {}
+    try:
+        response = requests.post(url, data=data, headers=headers)
+    except requests.ConnectTimeout:
+        print('连接超时')
+        httpPost(url, data, headers)
+    except requests.HTTPError:
+        print('http状态码非200')
+        httpPost(url, data, headers)
+    except Exception as e:
+        print('未知错误:', e)
+        httpPost(url, data, headers)
+    return response
+# ------------------------------------------------------------------------
 
 
 # --------------------------------------web--------------------------------
@@ -80,63 +115,6 @@ class removephone:
         phone = data.phone
         removePhoneByFile(phone)
         return '删除成功'
-
-def removePhoneByFile(phone):
-    removePhone(fileName,phone)
-    removePhone(backFileName,phone)
-
-def removePhone(fileName,removePhone):
-    with open(fileName,"r",encoding="utf-8") as f:
-        lines = f.readlines()
-        #print(lines)
-    with open(fileName,"w",encoding="utf-8") as f_w:
-        for line in lines:
-            record = line.split(' ')
-            phoneRecord = record[0].strip()
-            if removePhone in phoneRecord:
-                continue
-            f_w.write(line)
-
-# 月底恢复记录
-def recoverRecord():
-    with open(fileName, 'w') as mfile, open(backFileName, 'r') as backFile:
-        lines = backFile.readlines()
-        for line in lines:
-            mfile.write(line)
-
-def writeToFile(phone):
-    phoneList = getPhoneList()
-    for pho in phoneList:
-        if pho == phone:
-            return False
-    
-    #a 不覆盖，追加写 
-    with open(fileName, 'a') as mfile, open(backFileName, 'a') as backFile:
-        mfile.write(phone + ' 0,0,0,0' + '\n')
-        backFile.write(phone + ' 0,0,0,0' + '\n')
-        return True
-
-def getPhoneList():
-    phoneList = []
-    file = {}
-    try:
-        file = open(fileName, 'r')
-        lines = file.readlines()
-
-        for line in lines:
-            record = line.split(' ')
-            phone = record[0].strip()
-            # print(phone.strip())
-            phoneList.append(phone)
-        return phoneList
-    except FileNotFoundError:
-        file = open(fileName, mode='w', encoding='utf-8')
-        print("文件创建成功！")
-        return phoneList
-    finally:
-        if not(file is None):
-            file.close()
-
 
 # --------------------------------------class req--------------------------------
 class Req():
@@ -193,7 +171,8 @@ class Req():
 
     # 验证码验证
     def vailSubmit(self):
-        resp = requests.post(self.validationUrl, data=self.formData, headers=self.headers)
+        resp = httpPost(self.validationUrl, data=self.formData, headers=self.headers)
+        # resp = requests.post(self.validationUrl, data=self.formData, headers=self.headers)
         # resp.encoding = 'utf-8'
         # b'{"code":"YES","mobile":"aceaf972232b2372d3b8184affa9f367"}'
         jsonObj = json.loads(resp.text)
@@ -262,7 +241,6 @@ class Req():
         }
         return switcher.get(id)
 
-
 # --------------------------------------class user--------------------------------
 class Record():
     phone = ''
@@ -323,10 +301,65 @@ class MyImage():
         print(path)
         os.remove(path)
 
+# --------------------------------------文件读写---------------------------
+def removePhoneByFile(phone):
+    removePhone(fileName,phone)
+    removePhone(backFileName,phone)
 
-def getResponse(url):
-    response = requests.get(url)
-    return response
+def removePhone(fileName,removePhone):
+    with open(fileName,"r",encoding="utf-8") as f:
+        lines = f.readlines()
+        #print(lines)
+    with open(fileName,"w",encoding="utf-8") as f_w:
+        for line in lines:
+            record = line.split(' ')
+            phoneRecord = record[0].strip()
+            if removePhone in phoneRecord:
+                continue
+            f_w.write(line)
+
+# 月底恢复记录
+def recoverRecord():
+    with open(fileName, 'w') as mfile, open(backFileName, 'r') as backFile:
+        lines = backFile.readlines()
+        for line in lines:
+            mfile.write(line)
+
+def writeToFile(phone):
+    phoneList = getPhoneList()
+    for pho in phoneList:
+        if pho == phone:
+            return False
+    
+    #a 不覆盖，追加写 
+    with open(fileName, 'a') as mfile, open(backFileName, 'a') as backFile:
+        mfile.write(phone + ' 0,0,0,0' + '\n')
+        backFile.write(phone + ' 0,0,0,0' + '\n')
+        return True
+
+def getPhoneList():
+    phoneList = []
+    file = {}
+    try:
+        file = open(fileName, 'r')
+        lines = file.readlines()
+
+        for line in lines:
+            record = line.split(' ')
+            phone = record[0].strip()
+            # print(phone.strip())
+            phoneList.append(phone)
+        return phoneList
+    except FileNotFoundError:
+        file = open(fileName, mode='w', encoding='utf-8')
+        print("文件创建成功！")
+        return phoneList
+    finally:
+        if not(file is None):
+            file.close()
+# ------------------------------------------------------------------------------
+
+
 
 # 匹配手机号
 def checkMobile(mobile):
@@ -347,7 +380,7 @@ def getVerificationCode(reqObj):
     # 请求获取验证码
     codeUrl = reqObj.getCodeUrl()
     # print('验证码链接', codeUrl)
-    imgResp = getResponse(codeUrl)
+    imgResp = httpGet(codeUrl)
     # print(imgResp)
     myImage = MyImage('test.png')
     # 转为图片
@@ -375,6 +408,9 @@ def getEncryptionMobile(reqObj):
 
 
 def outwitTheMilk(reqObj,f_w,recordObj):
+    global stopFlag
+    global stopcounter
+
     if(reqObj.count > 2):
         # 手机不是联通号
         if not(recordObj.isunicom):
@@ -412,6 +448,8 @@ def outwitTheMilk(reqObj,f_w,recordObj):
     outwitTheMilk(reqObj, f_w, recordObj)    
 
 def job():
+    global stopcounter
+    global stopCount
     with open(fileName,"r",encoding="utf-8") as f:
         lines = f.readlines()
         #print(lines)
@@ -419,10 +457,10 @@ def job():
         # line -> 手机号码 50MB累计流量,100MB累计流量,1000MB累计流量,20钻石
         for line in lines:
             # 连续stopCount次不中奖则停止抽奖
-            if stopCountFlag == stopCount:
+            if stopcounter >= stopCount:
                 f_w.write(line)
                 continue
-
+            print('count=', stopcounter)
             record = Record()
             record.setAttribute(line)
 
@@ -435,7 +473,7 @@ def job():
             reqObj = Req()
             reqObj.mobile = record.phone
             reqObj.sourceMobile = record.phone
-            resp = getResponse(reqObj.officialUrl)
+            resp = httpGet(reqObj.officialUrl)
             reqObj.setCookiesAndUserId(resp)
             
             # 流量>=1000这个月不再抽奖
@@ -446,8 +484,15 @@ def job():
             
             # 进行抽奖
             outwitTheMilk(reqObj,f_w, record)
+
+            # 没中奖 +1 连续stopCount次不中则退出
+            print(stopFlag)
+            if stopFlag:
+                stopcounter += 1
+            
+
     print('抽奖完成')
-    stopCountFlag = 0
+    stopcounter = 0
     # 如果是最后一天，将恢复记录
     if isLastDay():
         print('lastday')
@@ -457,6 +502,7 @@ def job():
 
 # 记录一下
 def setRecord(record):
+    global stopFlag
     # -1 不是联通号码,移除
     # 0 无抽奖次数
     # 1 50MB
@@ -479,10 +525,13 @@ def setRecord(record):
     if record.prize == 5:
         record.prizeList[3] += 20
     
-    if record.prize == 1 or record.prize == 2 or record.prize == 4 or record.prize == 5
-        stopCountFlag = 0
+    # 中奖
+    if record.prize == 1 or record.prize == 2 \
+    or record.prize == 4 or record.prize == 5:
+        stopFlag = False
     else:
-        stopCountFlag += 1
+        # 没中
+        stopFlag = True
 # --------------------------------------是否是月末(copy)----------------------------
 def last_day_of_month(any_day):
     """
@@ -527,5 +576,6 @@ def webAppTask():
 
 
 if __name__ == "__main__":
-    threading.Thread(target=scheduleTask).start()
-    threading.Thread(target=webAppTask).start()
+    # threading.Thread(target=scheduleTask).start()
+    # threading.Thread(target=webAppTask).start()
+    job()
