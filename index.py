@@ -37,7 +37,7 @@ fileName = 'phone.txt'
 # 备份文件（没有则自动创建）
 backFileName = 'phone.back'
 # 抽奖任务执行时间
-taskTime = '00:30'
+taskTime = '00:31'
 # 抽奖时间间隔
 intervalTime = 0
 # 连续多少次不中奖停止抽奖（针对流量被抽完停止抽奖）
@@ -459,7 +459,6 @@ def job():
             if stopcounter >= stopCount:
                 f_w.write(line)
                 continue
-            print('count=', stopcounter)
             record = Record()
             record.setAttribute(line)
 
@@ -485,7 +484,6 @@ def job():
             outwitTheMilk(reqObj,f_w, record)
 
             # 没中奖 +1 连续stopCount次不中则退出
-            print(stopFlag)
             if stopFlag:
                 stopcounter += 1
             
