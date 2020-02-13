@@ -39,7 +39,7 @@ backFileName = 'phone.back'
 # 抽奖任务执行时间
 taskTime = '00:30'
 # 抽奖时间间隔
-intervalTime = 1
+intervalTime = 0
 # 连续多少次不中奖停止抽奖（针对流量被抽完停止抽奖）
 stopCount = 15
 
