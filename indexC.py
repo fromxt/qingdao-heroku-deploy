@@ -30,6 +30,7 @@ import datetime
 
 # 步骤：获取验证码，验证验证码获取加密手机号， 抽奖
 
+# 以下可自行修改-------------------
 # 手机号保存文件（没有则自动创建）
 fileName = 'phone.txt'
 # 备份文件（没有则自动创建）
@@ -39,6 +40,14 @@ backFileName = 'phone.back'
 taskTime = '00:30'
 # 抽奖时间间隔
 intervalTime = 1
+# 连续多少次不中奖停止抽奖（针对流量被抽完停止抽奖）
+stopCount = 15
+# 以上可自行修改-------------------
+
+# 不中奖累加器(不用管)
+stopcounter = 0
+# 这个不用管
+stopFlag = False
 
 # 验证码识别接口(post请求)
 apiUrl = 'http://47.94.234.77:9527/getCode'
@@ -55,6 +64,37 @@ app = web.application(urls, globals())
 # templates模版文件夹
 render = web.template.render('templates/')
 
+# -------------------------------------http-------------------------------
+def httpGet(url):
+    response = {}
+    try:
+        response = requests.get(url)
+    except requests.ConnectTimeout:
+        print('连接超时')
+        httpGet(url)
+    except requests.HTTPError:
+        print('http状态码非200')
+        httpGet(url)
+    except Exception as e:
+        print('未知错误:', e)
+        httpGet(url)
+    return response
+
+def httpPost(url, data, headers):
+    response = {}
+    try:
+        response = requests.post(url, data=data, headers=headers)
+    except requests.ConnectTimeout:
+        print('连接超时')
+        httpPost(url, data, headers)
+    except requests.HTTPError:
+        print('http状态码非200')
+        httpPost(url, data, headers)
+    except Exception as e:
+        print('未知错误:', e)
+        httpPost(url, data, headers)
+    return response
+# ------------------------------------------------------------------------
 
 # --------------------------------------web--------------------------------
 # 首页：http://localhost:8080/qingdao
@@ -78,6 +118,7 @@ class removephone:
         removePhoneByFile(phone)
         return '删除成功'
 
+# --------------------------------------文件读写---------------------------
 def removePhoneByFile(phone):
     removePhone(fileName,phone)
     removePhone(backFileName,phone)
@@ -100,7 +141,6 @@ def recoverRecord():
         lines = backFile.readlines()
         for line in lines:
             mfile.write(line)
-
 
 def writeToFile(phone):
     phoneList = getPhoneList()
@@ -134,6 +174,7 @@ def getPhoneList():
     finally:
         if not(file is None):
             file.close()
+# --------------------------------------文件读写---------------------------
 
 
 # --------------------------------------class req--------------------------------
@@ -190,7 +231,8 @@ class Req():
 
     # 验证码验证
     def vailSubmit(self):
-        resp = requests.post(self.validationUrl, data=self.formData, headers=self.headers)
+        resp = httpPost(self.validationUrl, data=self.formData, headers=self.headers)
+        # resp = requests.post(self.validationUrl, data=self.formData, headers=self.headers)
         # resp.encoding = 'utf-8'
         jsonObj = json.loads(resp.text)
         return jsonObj
@@ -203,7 +245,8 @@ class Req():
     # 2 1000MB
     # 3 20砖石
     def goodLuck(self):
-        resp = requests.post(self.luckUrl, data=self.formData, headers=self.headers)
+        resp = httpPost(self.luckUrl, data=self.formData, headers=self.headers)
+        # resp = requests.post(self.luckUrl, data=self.formData, headers=self.headers)
         resp.encoding = 'utf-8'
         jsonObj = json.loads(resp.text)
         if jsonObj['status'] == 500:
@@ -276,10 +319,7 @@ class Record():
         return line
 
 
-def getResponse(url):
-    response = requests.get(url)
-    return response
-
+# 调用api接口获取验证码
 def callApigetCode(codeUrl):
     formData = {
         "url": codeUrl
@@ -297,7 +337,6 @@ def checkMobile(mobile):
     else:
         print("手机号码错误")
         return False
-
 
 
 # 验证验证码获取加密手机号
@@ -353,21 +392,30 @@ def outwitTheMilk(reqObj,f_w,recordObj):
  
 
 def job():
+    global stopcounter
+    global stopCount
     with open(fileName,"r",encoding="utf-8") as f:
         lines = f.readlines()
     with open(fileName,"w",encoding="utf-8") as f_w:
         # line -> 手机号码 50MB累计流量,100MB累计流量,1000MB累计流量,20钻石
         for line in lines:
+            # 连续stopCount次不中奖则停止抽奖
+            if stopcounter >= stopCount:
+                f_w.write(line)
+                continue
+
             record = Record()
             record.setAttribute(line)
             print('手机号', record.phone)
+
+            # 手机号码错误将移除
             if not(checkMobile(record.phone)):
-                # 手机号码错误将移除
                 continue
+                
             reqObj = Req()
             reqObj.mobile = record.phone
             reqObj.sourceMobile = record.phone
-            resp = getResponse(reqObj.officialUrl)
+            resp = httpGet(reqObj.officialUrl)
             reqObj.setCookiesAndUserId(resp)
             
             # 流量>=1000这个月不再抽奖
@@ -379,6 +427,10 @@ def job():
             # 进行抽奖
             outwitTheMilk(reqObj,f_w, record)
 
+             # 没中奖 +1 连续stopCount次不中则退出
+            if stopFlag:
+                stopcounter += 1
+
     print('抽奖完成')
     # 如果是最后一天，将恢复记录
     if isLastDay():
@@ -387,6 +439,7 @@ def job():
 
 # 记录一下
 def setRecord(record):
+    global stopFlag
     # -1 不是联通号码,移除
     # 0 无抽奖次数
     # 1 50MB
@@ -407,6 +460,14 @@ def setRecord(record):
         record.prizeList[2] = 1000
     if record.prize == 5:
         record.prizeList[3] += 20
+
+        # 中奖
+    if record.prize == 1 or record.prize == 2 \
+    or record.prize == 4 or record.prize == 5:
+        stopFlag = False
+    else:
+        # 没中
+        stopFlag = True
     
 # --------------------------------------是否是月末(copy)----------------------------
 def last_day_of_month(any_day):
@@ -451,5 +512,6 @@ def webAppTask():
 
 
 if __name__ == "__main__":
-    threading.Thread(target=scheduleTask).start()
-    threading.Thread(target=webAppTask).start()
+    # threading.Thread(target=scheduleTask).start()
+    # threading.Thread(target=webAppTask).start()
+    job()

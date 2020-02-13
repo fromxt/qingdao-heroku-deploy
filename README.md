@@ -28,3 +28,12 @@ pip install schedule
 ```
 启动:python indexC.py，默认使用8080端口，使用其它端口：python indexC.py 端口号
 
+# 2-12更新：
+添加抽奖记录日志（phone.txt）
+每一行格式:手机号 50MB累计流量,100MB累计流量,1000MB累计流量,20钻石
+
+用户抽到1000MB不再抽奖
+月底恢复记录
+
+# 2-13更新：
+连续stopCount次不中奖停止抽奖
