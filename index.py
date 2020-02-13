@@ -38,7 +38,7 @@ fileName = 'phone.txt'
 backFileName = 'phone.back'
 
 # 抽奖任务执行时间
-taskTime = '00:30'
+taskTime = '18:38'
 # 抽奖时间间隔
 intervalTime = 1
 
@@ -438,13 +438,14 @@ def job():
             
             # 进行抽奖
             outwitTheMilk(reqObj,f_w, record)
+    
     print('抽奖完成')
     # 如果是最后一天，将恢复记录
     if isLastDay():
         print('lastday')
         recoverRecord()
 
-
+threads = []
 
 # 记录一下
 def setRecord(record):
@@ -453,7 +454,7 @@ def setRecord(record):
     # 1 50MB
     # 2 100MB
     # 3 幸运奖
-    # 4 100MB
+    # 4 1000MB
     # 5 20钻石
 
     if record.prize == -1:
@@ -513,5 +514,6 @@ def webAppTask():
 
 
 if __name__ == "__main__":
-    threading.Thread(target=scheduleTask).start()
-    threading.Thread(target=webAppTask).start()
+    # threading.Thread(target=scheduleTask).start()
+    # threading.Thread(target=webAppTask).start()
+    job()
