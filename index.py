@@ -41,7 +41,7 @@ taskTime = '00:31'
 # 抽奖时间间隔
 intervalTime = 0
 # 连续多少次不中奖停止抽奖（针对流量被抽完停止抽奖）
-stopCount = 15
+stopCount = 50
 
 
 # 不中奖累加器(不用管)
@@ -173,7 +173,6 @@ class Req():
     def vailSubmit(self):
         resp = httpPost(self.validationUrl, data=self.formData, headers=self.headers)
         # resp.encoding = 'utf-8'
-        # b'{"code":"YES","mobile":"aceaf972232b2372d3b8184affa9f367"}'
         jsonObj = json.loads(resp.text)
         return jsonObj
 
@@ -346,7 +345,6 @@ def getPhoneList():
         for line in lines:
             record = line.split(' ')
             phone = record[0].strip()
-            # print(phone.strip())
             phoneList.append(phone)
         return phoneList
     except FileNotFoundError:
@@ -378,9 +376,7 @@ def checkMobile(mobile):
 def getVerificationCode(reqObj):
     # 请求获取验证码
     codeUrl = reqObj.getCodeUrl()
-    # print('验证码链接', codeUrl)
     imgResp = httpGet(codeUrl)
-    # print(imgResp)
     myImage = MyImage('test.png')
     # 转为图片
     imgObj = myImage.saveImage(imgResp)
@@ -418,7 +414,6 @@ def outwitTheMilk(reqObj,f_w,recordObj):
         else:
             # 写入文件# 写入文件# 写入文件# 写入文件
             line = recordObj.getLine()
-            print('写入line=',line)
             f_w.write(line)
             # 返回不在抽奖
             return
