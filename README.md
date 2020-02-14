@@ -25,7 +25,7 @@ python3 -m pip install web.py==0.40
 
 pip3 install schedule
 ```
-启动:python3 indexC.py，默认使用8080端口，使用其它端口：python indexC.py 端口号
+启动:python3 indexC.py，默认使用8080端口，使用其它端口：python3 indexC.py 端口号
 
 # 2-12更新：
 添加抽奖记录日志（phone.txt）
