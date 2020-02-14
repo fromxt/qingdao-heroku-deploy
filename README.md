@@ -14,19 +14,18 @@ https://m.client.10010.com/sma-lottery/qpactivity/getSysManageLoginCode.htm?user
  
 只针对[青岛流量](https://m.client.10010.com/sma-lottery/qpactivity/qingpiindex)。其它网站的验证码均不能识别。
 
+# 注意：请使用python3，pip3
+
 安装依赖：
 ```
-pip install requests
+pip3 install requests
 
-# 安装web.py
-# Python 2.7使用
-pip2 install web.py==0.40
 # Python 3使用
 python3 -m pip install web.py==0.40
 
-pip install schedule
+pip3 install schedule
 ```
-启动:python indexC.py，默认使用8080端口，使用其它端口：python indexC.py 端口号
+启动:python3 indexC.py，默认使用8080端口，使用其它端口：python indexC.py 端口号
 
 # 2-12更新：
 添加抽奖记录日志（phone.txt）
