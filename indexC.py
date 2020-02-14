@@ -41,7 +41,7 @@ taskTime = '00:31'
 # 抽奖时间间隔
 intervalTime = 1
 # 连续多少次不中奖停止抽奖（针对流量被抽完停止抽奖）
-stopCount = 15
+stopCount = 50
 # 以上可自行修改-------------------
 
 # 不中奖累加器(不用管)
@@ -361,8 +361,8 @@ def outwitTheMilk(reqObj,f_w,recordObj):
         else:
             # 写入文件# 写入文件# 写入文件# 写入文件
             line = recordObj.getLine()
-            print('写入line=',line)
             f_w.write(line)
+            print('')
             # 返回不在抽奖
             return
     code = callApigetCode(reqObj.getCodeUrl())
