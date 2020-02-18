@@ -37,11 +37,11 @@ fileName = 'phone.txt'
 backFileName = 'phone.back'
 
 # 抽奖任务执行时间
-taskTime = '00:31'
+taskTime = '00:05'
 # 抽奖时间间隔
 intervalTime = 1
 # 连续多少次不中奖停止抽奖（针对流量被抽完停止抽奖,还是Ip被拉黑）
-stopCount = 50
+stopCount = 500
 # 以上可自行修改-------------------
 
 # 不中奖累加器(不用管)
@@ -193,9 +193,15 @@ class Req():
         #抽奖地址
         self.luckUrl = 'https://m.client.10010.com/sma-lottery/qpactivity/qpLuckdraw.htm'
         self.headers = {}
-        self.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36'
+        self.headers['Accept'] = 'application/json, text/javascript, */*; q=0.01'
+        self.headers['User-Agent'] = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.89 Safari/537.36'
         self.headers['Content-Type'] = 'application/x-www-form-urlencoded;charset=UTF-8'
         self.headers['Referer'] = 'https://m.client.10010.com/sma-lottery/qpactivity/qingpiindex'
+        self.headers['Host'] = 'm.client.10010.com'
+        self.headers['Origin'] = 'https://m.client.10010.com'
+        self.headers['Sec-Fetch-Mode'] = 'cors'
+        self.headers['Sec-Fetch-Site'] = 'same-origin'
+        self.headers['X-Requested-With'] = 'XMLHttpRequest'
         self.formData = {}
         self.count = 0
 
