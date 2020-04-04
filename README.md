@@ -1,6 +1,11 @@
 # 青岛流量挂机
 
+## 一键部署heroku
+
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
+
 官网(https://m.client.10010.com/sma-lottery/qpactivity/qingpiindex)
+
 
 抽奖接口 post
 参数:mobile,image(验证码),userid
