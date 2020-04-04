@@ -1,9 +1,5 @@
 # 青岛流量挂机
 
-## 一键部署heroku
-
-[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
-
 官网(https://m.client.10010.com/sma-lottery/qpactivity/qingpiindex)
 
 
@@ -39,3 +35,8 @@ pip3 install schedule
 
 # 2-13更新：
 连续stopCount次不中奖停止抽奖
+
+
+# 一键部署heroku
+
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
