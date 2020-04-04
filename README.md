@@ -37,7 +37,7 @@ pip3 install schedule
 连续stopCount次不中奖停止抽奖
 
 
-# 4.4一键部署heroku
+# 4-4一键部署heroku
 ### 如果你没有vps，可以免费部署到heroku
 
 [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
