@@ -50,10 +50,12 @@ pip3 install schedule
 
 3. heroku login -i
 
-4. heroku create apps: <APP name>
+4. heroku create apps:<你APP名字>
   
 5. git add -A
 
 6. git commit -m "init"
 
 7. git push heroku master
+
+部署可以访问:https://<你APP名字>.herokuapp.com/qingdao
