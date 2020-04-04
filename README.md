@@ -37,7 +37,23 @@ pip3 install schedule
 连续stopCount次不中奖停止抽奖
 
 
-# 4-4一键部署heroku
+# 4-4 一按健部署heroku
 ### 如果你没有vps，可以免费部署到heroku
 
 [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
+
+### Git 手动部署步骤
+
+1. git clone https://github.com/fromxt/qingdao-heroku-deploy.git
+
+2. cd qingdao-heroku-deploy 
+
+3. heroku login -i
+
+4. heroku create apps: <APP name>
+  
+5. git add -A
+
+6. git commit -m "init"
+
+7. git push heroku master
