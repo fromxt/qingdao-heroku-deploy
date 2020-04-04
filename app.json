@@ -1,0 +1,9 @@
+{
+  "name": "qingdao heroku deploy",
+  "description": "qingdao deploy on heroku",
+  "keywords": [
+    "qingdao"
+  ],
+  "website": "https://github.com/fromxt/qingdao-heroku-deploy.git",
+  "repository": "https://github.com/fromxt/qingdao-heroku-deploy"
+}
