@@ -18,9 +18,10 @@ https://m.client.10010.com/sma-lottery/qpactivity/getSysManageLoginCode.htm?user
 需要安装模块:
 ```
 pip3 install requests
+pip3 install tesseract-ocr
 pip3 install pytesseract
 pip3 install Pillow
-python3 -m pip install web.py==0.40
+pip3 install web.py==0.40
 pip3 install schedule
 ```
 
@@ -59,3 +60,4 @@ pip3 install schedule
 7. git push heroku master
 
 部署可以访问:https://<你APP名字>.herokuapp.com/qingdao
+h
